@@ -2,23 +2,29 @@ pool:
   vmImage: ubuntu-latest
 parameters:
   - name: cloudflareApiToken
-    type: string
   - name: cloudflareAccountId
-    type: string
 steps:
   - task: UseNode@1
     inputs:
       version: "22.x"
-  - pwsh: npm install
-  - pwsh: npm exec wrangler whoami
+
+  - pwsh: npm install --global corepack@latest
+
+  - pwsh: corepack enable
+
+  - pwsh: pnpm install
+
+  - pwsh: pnpm exec wrangler whoami
     env:
       CLOUDFLARE_API_TOKEN: ${{ parameters.cloudflareApiToken }}
       CLOUDFLARE_ACCOUNT_ID: ${{ parameters.cloudflareAccountId }}
       WRANGLER_LOG_PATH: $(Pipeline.Workspace)/logs/wrangler
-  - pwsh: npm exec wrangler deploy
+
+  - pwsh: pnpm exec wrangler deploy
     env:
       CLOUDFLARE_API_TOKEN: ${{ parameters.cloudflareApiToken }}
       CLOUDFLARE_ACCOUNT_ID: ${{ parameters.cloudflareAccountId }}
       WRANGLER_LOG_PATH: $(Pipeline.Workspace)/logs/wrangler
-  - publish: $(Pipeline.Workspace)/logs/wrangler
+
+  - publish: $(Pipeline.Workspace)/logs
     condition: always()
