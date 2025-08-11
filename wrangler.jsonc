@@ -4,10 +4,10 @@
  */
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "wrangler-deploy-repro",
+  "name": "wrangler_repro",
   "compatibility_date": "2025-07-01",
   "assets": {
     "directory": "./dist",
-    "not_found_handling": "404-page"
-  }
+    "not_found_handling": "404-page",
+  },
 }

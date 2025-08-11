@@ -1,0 +1,15 @@
+# Exclude everything
+**/*
+
+# Re-include the top-level dist folder, its contents, and the specific files
+!dist/
+!dist/**
+!azure-pipelines/
+!azure-pipelines/*.ps1
+!.node-version
+!package.json
+!pnpm-lock.yaml
+!wrangler.jsonc
+
+!node_modules/
+!node_modules/**

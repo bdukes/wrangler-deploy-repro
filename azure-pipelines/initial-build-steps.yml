@@ -1,0 +1,26 @@
+parameters:
+  - name: workingDirectory
+    type: string
+    default: $(Build.SourcesDirectory)/
+
+steps:
+  - pwsh: if (Test-Path .node-version) { $nodeVersion = (Get-Content .node-version -Raw).Trim(); } else { $nodeVersion = "22.x" }; Write-Host "##vso[task.setvariable variable=node.version]$nodeVersion"
+    displayName: Read .node-version
+    workingDirectory: "${{ parameters.workingDirectory }}"
+
+  - task: UseNode@1
+    displayName: Use Node
+    inputs:
+      version: $(node.version)
+
+  - pwsh: Write-Host '##[command]npm install --global corepack@latest'; npm install --global corepack@latest
+    displayName: Install Corepack
+    workingDirectory: "${{ parameters.workingDirectory }}"
+
+  - pwsh: "Write-Host '##[command]corepack enable'; corepack enable"
+    displayName: Enable Corepack/pnpm
+    workingDirectory: "${{ parameters.workingDirectory }}"
+
+  - pwsh: "Write-Host '##[command]pnpm install'; pnpm install"
+    displayName: pnpm install
+    workingDirectory: "${{ parameters.workingDirectory }}"
