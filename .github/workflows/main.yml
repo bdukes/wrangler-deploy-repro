@@ -1,0 +1,86 @@
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build_Stage_Build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Use Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+
+      - name: Install Corepack
+        run: npm install --global corepack@latest
+
+      - name: Enable Corepack/pnpm
+        run: corepack enable
+
+      - name: pnpm install
+        run: pnpm install
+
+      - name: pnpm run build
+        run: pnpm run build
+
+      - name: Publish output artifact
+        uses: actions/upload-artifact@v4
+        with:
+          path: ${{ github.workspace }}
+          name: output
+          include-hidden-files: true
+
+  deploy_wrangler_repro_Stage_Deploy:
+    runs-on: ubuntu-latest
+    needs: [build_Stage_Build]
+
+    steps:
+      - name: Download output folder
+        uses: actions/download-artifact@v5
+        with:
+          name: output
+          path: output
+
+      - name: Use Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: output/.node-version
+
+      - name: Install Corepack
+        run: npm install --global corepack@latest
+        working-directory: output
+
+      - name: Enable Corepack/pnpm
+        run: corepack enable
+        working-directory: output
+
+      - name: pnpm install
+        run: pnpm install
+        working-directory: output
+
+      - name: wrangler whoami
+        run: pnpm exec wrangler whoami
+        working-directory: output
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.cloudflareApiToken }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.cloudflareAccountId }}
+          WRANGLER_LOG_PATH: ${{ github.workspace }}/logs/wrangler
+
+      - name: wrangler deploy
+        run: pnpm exec wrangler deploy
+        working-directory: output
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.cloudflareApiToken }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.cloudflareAccountId }}
+          WRANGLER_LOG_PATH: ${{ github.workspace }}/logs/wrangler
+
+      - name: Publish logs artifact
+        uses: actions/upload-artifact@v4
+        with:
+          path: ${{ github.workspace }}/logs
+          name: logs
+        if: always()
